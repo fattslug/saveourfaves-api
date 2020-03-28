@@ -1,0 +1,6 @@
+node_modules/
+dist/
+build/production.env
+build/local.env
+.env
+config/whitelist.js
