@@ -46,56 +46,15 @@ function getRestaurants(req, res) {
   console.log('GET', chalk.blue('/restaurants/'));
   console.log(chalk.black.bgBlue('Getting Restaurants...'));
 
-  const { f, t, pm } = req.query;
-  const query = {
-    Deleted: {
-      $ne: true
-    }
-  };
-
-  query.DateAdded = {
-    $lte: new Date(moment(parseInt(t) || new Date()).endOf('day').format()),
-    $gte: new Date(f ? moment(parseInt(f)).startOf('day').format() : moment().subtract(1000, 'days').startOf('day').format())
-  }
-
-  if (pm) {
-    query.PaymentMethods = {
-      $elemMatch: {
-        $or: []
-      }
-    };
-    pm.split(',').forEach((typeIndex, i) => {
-      query.PaymentMethods.$elemMatch.$or.push({ PaymentType: paymentMethodsMap[typeIndex] });
-    });
-  }
-
-  console.log(query);
-
   try {
-    Restaurant.aggregate([
-      { $match: query }
-    ]).exec(async (err, restaurants) => {
+    Restaurant.find({}).exec(async (err, restaurants) => {
       if (err) { throw(err); }
-      await Restaurant.populate(restaurants, {path: "PaymentMethods.Type"});
       res.status(200).send({
         success: true,
         body: {
-          totalAmount: restaurants.reduce((acc, curr) => {
-            if (curr.AmountPaid) {
-              return acc + curr.AmountPaid;
-            } else {
-              let totalPaid = 0;
-              curr.PaymentMethods.forEach((paymentMethod) => {
-                totalPaid += paymentMethod.AmountPaid;
-              });
-              return acc + totalPaid;
-            }
-          }, 0),
-          restaurants: restaurants.sort((a, b) => {
-            return new Date(b.DateAdded) - new Date(a.DateAdded);
-          })
+          restaurants
         }
-      })
+      });
     })
   } catch (e) {
     console.log(chalk.red(e));
