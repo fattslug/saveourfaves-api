@@ -1,57 +1,50 @@
-const Entry = require('../schema/entry.schema');
+const Restaurant = require('../schema/restaurant.schema');
 const chalk = require('chalk');
 const moment = require('moment');
 
-const paymentMethodsMap = [
-  'Cash',
-  'Credit',
-  'Venmo',
-  'Apple Pay'
-];
-
-exports.addEntry = addEntry;
-exports.getEntries = getEntries;
-exports.getEntryByID = getEntryByID;
-exports.updateEntryByID = updateEntryByID;
-exports.deleteEntryByID = deleteEntryByID;
+exports.addRestaurant = addRestaurant;
+exports.getRestaurants = getRestaurants;
+exports.getRestaurantByID = getRestaurantByID;
+exports.updateRestaurantByID = updateRestaurantByID;
+exports.deleteRestaurantByID = deleteRestaurantByID;
 
 /**
- * Adds a new entry to the database
+ * Adds a new restaurant to the database
  * @param {object} req Request object
  * @param {object} res Response object
  * @returns {object} HTTP response
  */
-function addEntry(req, res) {
-  console.log(chalk.blue('/entries/'));
-  console.log(chalk.black.bgBlue('Adding Entry...'));
+function addRestaurant(req, res) {
+  console.log(chalk.blue('/restaurants/'));
+  console.log(chalk.black.bgBlue('Adding Restaurant...'));
 
-  const entry = new Entry(req.body.entry);
-  console.log(entry);
+  const restaurant = new Restaurant(req.body.restaurant);
+  console.log(restaurant);
 
   try {
-    entry.save();
+    restaurant.save();
     res.status(200).send({
       success: true,
-      body: entry
+      body: restaurant
     });
   } catch (e) {
     console.log(chalk.red(e));
     res.status(500).send({
       success: false,
-      message: 'Failed to save entry'
+      message: 'Failed to save restaurant'
     })
   }
 }
 
 /**
- * Gets all entries from database
+ * Gets all restaurants from database
  * @param {object} req Request object
  * @param {object} res Response object
  * @returns {object} HTTP response
  */
-function getEntries(req, res) {
-  console.log('GET', chalk.blue('/entries/'));
-  console.log(chalk.black.bgBlue('Getting Entries...'));
+function getRestaurants(req, res) {
+  console.log('GET', chalk.blue('/restaurants/'));
+  console.log(chalk.black.bgBlue('Getting Restaurants...'));
 
   const { f, t, pm } = req.query;
   const query = {
@@ -79,15 +72,15 @@ function getEntries(req, res) {
   console.log(query);
 
   try {
-    Entry.aggregate([
+    Restaurant.aggregate([
       { $match: query }
-    ]).exec(async (err, entries) => {
+    ]).exec(async (err, restaurants) => {
       if (err) { throw(err); }
-      await Entry.populate(entries, {path: "PaymentMethods.Type"});
+      await Restaurant.populate(restaurants, {path: "PaymentMethods.Type"});
       res.status(200).send({
         success: true,
         body: {
-          totalAmount: entries.reduce((acc, curr) => {
+          totalAmount: restaurants.reduce((acc, curr) => {
             if (curr.AmountPaid) {
               return acc + curr.AmountPaid;
             } else {
@@ -98,7 +91,7 @@ function getEntries(req, res) {
               return acc + totalPaid;
             }
           }, 0),
-          entries: entries.sort((a, b) => {
+          restaurants: restaurants.sort((a, b) => {
             return new Date(b.DateAdded) - new Date(a.DateAdded);
           })
         }
@@ -108,32 +101,32 @@ function getEntries(req, res) {
     console.log(chalk.red(e));
     res.status(500).send({
       success: false,
-      message: 'Failed to get all entries'
+      message: 'Failed to get all restaurants'
     })
   }
 }
 
 /**
- * Get specific entry in database
+ * Get specific restaurant in database
  * @param {object} req Request object
  * @param {object} res Response object
  * @returns {object} HTTP response
  */
-function getEntryByID(req, res) {
-  const entryID = req.params.entryID;
-  console.log('GET', chalk.blue('/entries/'), entryID);
-  console.log(chalk.black.bgBlue(`Getting Entry ID: ${entryID}...`));
+function getRestaurantByID(req, res) {
+  const restaurantID = req.params.restaurantID;
+  console.log('GET', chalk.blue('/restaurants/'), restaurantID);
+  console.log(chalk.black.bgBlue(`Getting Restaurant ID: ${restaurantID}...`));
 
   try {
-    Entry.findById(entryID).exec((err, entry) => {
+    Restaurant.findById(restaurantID).exec((err, restaurant) => {
       if (err) { throw(err); }
-      if (entry.Deleted) {
+      if (restaurant.Deleted) {
         throw(true);
       }
       res.status(200).send({
         success: true,
         body: {
-          entry: entry
+          restaurant: restaurant
         }
       });
     })
@@ -141,35 +134,35 @@ function getEntryByID(req, res) {
     console.log(chalk.red(e));
     res.status(500).send({
       success: false,
-      message: 'Failed to get entry'
+      message: 'Failed to get restaurant'
     })
   }
 }
 
 /**
- * Update specific entry in database
+ * Update specific restaurant in database
  * @param {object} req Request object
  * @param {object} res Response object
  * @returns {object} HTTP response
  */
-function updateEntryByID(req, res) {
-  const entryID = req.params.entryID;
-  const updates = req.body.entry;
-  console.log('UPDATE', chalk.blue('/entries/'), entryID);
-  console.log(chalk.black.bgBlue('Updating Entry...'));
+function updateRestaurantByID(req, res) {
+  const restaurantID = req.params.restaurantID;
+  const updates = req.body.restaurant;
+  console.log('UPDATE', chalk.blue('/restaurants/'), restaurantID);
+  console.log(chalk.black.bgBlue('Updating Restaurant...'));
 
   try {
-    Entry.findByIdAndUpdate(entryID, {
+    Restaurant.findByIdAndUpdate(restaurantID, {
       ClientName: updates.ClientName,
       ServicesRendered: updates.ServicesRendered,
       DateAdded: updates.DateAdded,
       PaymentMethods: updates.PaymentMethods
-    }, { new: true }).exec((err, newEntry) => {
+    }, { new: true }).exec((err, newRestaurant) => {
       if (err) { throw(err); }
       res.status(200).send({
         success: true,
         body: {
-          entry: newEntry
+          restaurant: newRestaurant
         }
       })
     })
@@ -177,31 +170,31 @@ function updateEntryByID(req, res) {
     console.log(chalk.red(e));
     res.status(500).send({
       success: false,
-      message: 'Failed to update entry'
+      message: 'Failed to update restaurant'
     })
   }
 }
 
 /**
- * Delete entry in database
+ * Delete restaurant in database
  * @param {object} req Request object
  * @param {object} res Response object
  * @returns {object} HTTP response
  */
-function deleteEntryByID(req, res) {
-  const entryID = req.params.entryID;
-  console.log('DELETE', chalk.blue('/entries/'), entryID);
-  console.log(chalk.black.bgBlue('Deleting Entry...'));
+function deleteRestaurantByID(req, res) {
+  const restaurantID = req.params.restaurantID;
+  console.log('DELETE', chalk.blue('/restaurants/'), restaurantID);
+  console.log(chalk.black.bgBlue('Deleting Restaurant...'));
 
   try {
-    Entry.findByIdAndUpdate(entryID, {
+    Restaurant.findByIdAndUpdate(restaurantID, {
       Deleted: true
-    }, { new: true }).exec((err, newEntry) => {
+    }, { new: true }).exec((err, newRestaurant) => {
       if (err) { throw(err); }
       res.status(200).send({
         success: true,
         body: {
-          entry: newEntry
+          restaurant: newRestaurant
         }
       })
     })
@@ -209,7 +202,7 @@ function deleteEntryByID(req, res) {
     console.log(chalk.red(e));
     res.status(500).send({
       success: false,
-      message: 'Failed to update entry'
+      message: 'Failed to update restaurant'
     })
   }
 }

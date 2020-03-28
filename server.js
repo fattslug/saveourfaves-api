@@ -12,8 +12,6 @@ const fs = require('fs');
 const db = require('./src/db');
 const app = express();
 
-app.use(passport.initialize());
-
 // CORS Setup
 if (process.env.USE_CORS === 'true') {
   const allowedOrigins = process.env.ALLOWED_ORIGINS;
@@ -44,8 +42,8 @@ app.use(bodyParser.urlencoded({
 }));
 
 // Routes
-const entryRoutes = require('./src/routes/entry.routes');
-app.use('/entries', entryRoutes);
+const restaurantRoutes = require('./src/routes/restaurant.routes');
+app.use('/restaurants', restaurantRoutes);
 
 // Listen
 let server;
