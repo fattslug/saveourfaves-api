@@ -10,4 +10,4 @@ mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopol
   }
 });
 
-module.exports = mongoose;ss
+module.exports = mongoose;
